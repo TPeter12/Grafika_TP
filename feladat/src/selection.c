@@ -1,56 +1,55 @@
 #include "selection.h"
+#include "unit.h"
 
-void initSelection(Selection* selection) {
-    selection->box.x = 0;
-    selection->box.y = 0;
-    selection->box.w = 0;
-    selection->box.h = 0;
-    selection->isSelecting = 0;
-    selection->startX = 0;
-    selection->startY = 0;
+static SDL_Rect selectionBox;
+static int startX, startY;
+static bool selecting = false;
+
+void start_selection(int worldX, int worldY) {
+    selecting = true;
+    startX = worldX;
+    startY = worldY;
+    selectionBox.x = startX;
+    selectionBox.y = startY;
+    selectionBox.w = 0;
+    selectionBox.h = 0;
 }
 
-void updateSelection(Selection* selection, SDL_Event* e) {
-    if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT) {
-        selection->isSelecting = 1;
-        selection->startX = e->button.x;
-        selection->startY = e->button.y;
-        selection->box.x = selection->startX;
-        selection->box.y = selection->startY;
-        selection->box.w = 0;
-        selection->box.h = 0;
-    }
-
-    if (e->type == SDL_MOUSEBUTTONUP && e->button.button == SDL_BUTTON_LEFT) {
-        selection->isSelecting = 0;
-    }
-
-    if (e->type == SDL_MOUSEMOTION && selection->isSelecting) {
-        int currentX = e->motion.x;
-        int currentY = e->motion.y;
-
-        selection->box.w = currentX - selection->startX;
-        selection->box.h = currentY - selection->startY;
-
-        if (selection->box.w < 0) {
-            selection->box.x = currentX;
-            selection->box.w = -selection->box.w;
-        }
-
-        if (selection->box.h < 0) {
-            selection->box.y = currentY;
-            selection->box.h = -selection->box.h;
-        }
+void update_selection(int worldX, int worldY) {
+    if (selecting) {
+        selectionBox.w = worldX - startX;
+        selectionBox.h = worldY - startY;
+        selectionBox.x = startX;
+        selectionBox.y = startY;
     }
 }
 
-void renderSelection(SDL_Renderer* renderer, Selection* selection) {
-    if (selection->isSelecting) {
-        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-        SDL_SetRenderDrawColor(renderer, 144, 238, 144, 64); // Halvány zöld belső
-        SDL_RenderFillRect(renderer, &selection->box);
+void finish_selection(void) {
+    if (!selecting) return;
+    selecting = false;
 
-        SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); // Zöld keret
-        SDL_RenderDrawRect(renderer, &selection->box);
+    SDL_Rect sel = selectionBox;
+    if (sel.w < 0) { sel.x += sel.w; sel.w = -sel.w; }
+    if (sel.h < 0) { sel.y += sel.h; sel.h = -sel.h; }
+
+    for (int i = 0; i < numUnits; i++) {
+        units[i].selected = unit_in_rect(&units[i], &sel);
     }
+}
+
+void draw_selection(SDL_Renderer* renderer, int cameraX, int cameraY) {
+    if (selecting) {
+        SDL_SetRenderDrawColor(renderer, 0, 255, 255, 255);
+        SDL_Rect r = {
+            selectionBox.x - cameraX,
+            selectionBox.y - cameraY,
+            selectionBox.w,
+            selectionBox.h
+        };
+        SDL_RenderDrawRect(renderer, &r);
+    }
+}
+
+bool is_selecting(void) {
+    return selecting;
 }

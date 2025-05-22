@@ -2,15 +2,12 @@
 #define SELECTION_H
 
 #include <SDL2/SDL.h>
+#include <stdbool.h>
 
-typedef struct {
-    SDL_Rect box;
-    int isSelecting;
-    int startX, startY;
-} Selection;
+void start_selection(int worldX, int worldY);
+void update_selection(int worldX, int worldY);
+void finish_selection(void);
+void draw_selection(SDL_Renderer* renderer, int cameraX, int cameraY);
+bool is_selecting(void);
 
-void initSelection(Selection* selection);
-void updateSelection(Selection* selection, SDL_Event* e);
-void renderSelection(SDL_Renderer* renderer, Selection* selection);
-
-#endif // SELECTION_H
+#endif

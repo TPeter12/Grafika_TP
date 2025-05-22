@@ -1,41 +1,30 @@
 #include "camera.h"
-#include <stddef.h>  // NULL makró használatához
+#include <SDL2/SDL.h>
 
-// Kamera inicializálása
-void init_camera(Camera *camera, float x, float y, float width, float height) {
-    camera->x = x;
-    camera->y = y;
-    camera->width = width;
-    camera->height = height;
-    camera->zoom = 1.0f;
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 600
+#define EDGE_SCROLL_MARGIN 20
+#define CAMERA_SPEED 5
+
+static int cameraX = 0;
+static int cameraY = 0;
+
+void init_camera(void) {
+    cameraX = 0;
+    cameraY = 0;
 }
 
-// Kamera elmozdítása
-void move_camera(Camera *camera, float dx, float dy) {
-    camera->x += dx;
-    camera->y += dy;
+void update_camera(int mouseX, int mouseY) {
+    if (mouseX < EDGE_SCROLL_MARGIN) cameraX -= CAMERA_SPEED;
+    if (mouseX > SCREEN_WIDTH - EDGE_SCROLL_MARGIN) cameraX += CAMERA_SPEED;
+    if (mouseY < EDGE_SCROLL_MARGIN) cameraY -= CAMERA_SPEED;
+    if (mouseY > SCREEN_HEIGHT - EDGE_SCROLL_MARGIN) cameraY += CAMERA_SPEED;
 }
 
-// Kamera pozíciójának lekérése
-void get_camera_position(const Camera *camera, float *x, float *y) {
-    if (x != NULL) *x = camera->x;
-    if (y != NULL) *y = camera->y;
+int get_camera_x(void) {
+    return cameraX;
 }
 
-// Kamera méretének lekérése
-void get_camera_size(const Camera *camera, float *width, float *height) {
-    if (width != NULL) *width = camera->width;
-    if (height != NULL) *height = camera->height;
-}
-
-// Zoom beállítása
-void set_camera_zoom(Camera *camera, float zoom) {
-    if (zoom < 0.1f) zoom = 0.1f;   // Alsó határ
-    if (zoom > 5.0f) zoom = 5.0f;   // Felső határ
-    camera->zoom = zoom;
-}
-
-// Zoom lekérdezése
-float get_camera_zoom(const Camera *camera) {
-    return camera->zoom;
+int get_camera_y(void) {
+    return cameraY;
 }
